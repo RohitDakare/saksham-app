@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Payment</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #F7FAFC;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            color: #2D3748;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .amount {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2D3748;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #4A5568;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #2D3748;
+            background-color: white;
+            -webkit-appearance: none;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4299E1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .pay-button {
+            background-color: #C53030;
+            color: white;
+        }
+
+        .pay-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .cancel-button {
+            background-color: #EDF2F7;
+            color: #2D3748;
+        }
+
+        .secure-text {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #C53030;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Secure Payment</h1>
+            <p>Enter your payment details below</p>
+        </div>
+
+        <div class="amount" id="amount">
+            Amount to Pay: ₹0
+        </div>
+
+        <form id="paymentForm">
+            <div class="form-group">
+                <label for="cardNumber">Card Number</label>
+                <input 
+                    type="text" 
+                    id="cardNumber" 
+                    placeholder="4242 4242 4242 4242"
+                    maxlength="19"
+                    inputmode="numeric"
+                    autocomplete="cc-number"
+                    required
+                >
+            </div>
+
+            <div class="row">
+                <div class="col form-group">
+                    <label for="expiry">Expiry Date</label>
+                    <input 
+                        type="text" 
+                        id="expiry" 
+                        placeholder="MM/YY"
+                        maxlength="5"
+                        inputmode="numeric"
+                        autocomplete="cc-exp"
+                        required
+                    >
+                </div>
+
+                <div class="col form-group">
+                    <label for="cvc">CVC</label>
+                    <input 
+                        type="password" 
+                        id="cvc" 
+                        placeholder="123"
+                        maxlength="3"
+                        inputmode="numeric"
+                        autocomplete="cc-csc"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Cardholder Name</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    placeholder="John Smith"
+                    autocomplete="cc-name"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="button pay-button" id="payButton">
+                Pay Now
+            </button>
+            <button type="button" class="button cancel-button" id="cancelButton">
+                Cancel
+            </button>
+
+            <p class="secure-text">
+                Your payment information is encrypted and secure
+            </p>
+        </form>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Get amount from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const amount = urlParams.get('amount') || 0;
+        document.getElementById('amount').textContent = `Amount to Pay: ₹${Number(amount).toLocaleString()}`;
+
+        // Format card number with spaces
+        document.getElementById('cardNumber').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+            e.target.value = value;
+        });
+
+        // Format expiry date
+        document.getElementById('expiry').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').slice(0, 5);
+            e.target.value = value;
+        });
+
+        // Format CVC to only allow numbers
+        document.getElementById('cvc').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '').slice(0, 3);
+            e.target.value = value;
+        });
+
+        // Handle form submission
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const loading = document.getElementById('loading');
+            const payButton = document.getElementById('payButton');
+            
+            loading.classList.add('active');
+            payButton.disabled = true;
+
+            // Simulate payment processing
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Send success message to Android
+            if (window.android) {
+                window.android.onPaymentSuccess();
+            }
+        });
+
+        // Handle cancel button
+        document.getElementById('cancelButton').addEventListener('click', () => {
+            if (window.android) {
+                window.android.onPaymentCancel();
+            }
+        });
+    </script>
+</body>
+</html> 
