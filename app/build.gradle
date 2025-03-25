@@ -36,10 +36,18 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation project(':capacitor-cordova-android-plugins')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
-    implementation project(':capacitor-cordova-android-plugins')
+}
+
+// Add this at the end of the file
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.core:core-ktx:1.9.0'
+        force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.20'
+    }
 }
 
 apply from: 'capacitor.build.gradle'

@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package com.saksham.app;  // Changed from com.getcapacitor.myapp
 
 import static org.junit.Assert.*;
 
